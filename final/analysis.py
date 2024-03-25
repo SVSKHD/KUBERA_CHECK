@@ -1,16 +1,44 @@
 # analysis.py
 import MetaTrader5 as mt5
 
+
 def detect_volume_change(symbol, periods=20, threshold=1.5):
+    if not mt5.initialize():
+        print("Could not initialize MT5, error code =", mt5.last_error())
+        return False
+
     rates = mt5.copy_rates_from_pos(symbol, mt5.TIMEFRAME_M1, 0, periods + 1)
-    volumes = [rate['volume'] for rate in rates]
-    avg_volume = sum(volumes[:-1]) / periods
-    return volumes[-1] > avg_volume * threshold
+
+    if rates is None or len(rates) == 0:
+        print("No rates data found.")
+        mt5.shutdown()
+        return False
+
+    # Print the first rate entry to inspect its fields
+
+    mt5.shutdown()
+    return False  # Temporary return to prevent further execution
+
 
 def detect_institutional_movement(symbol, periods=20, threshold=1.5):
+    if not mt5.initialize():
+        print("Could not initialize MT5, error code =", mt5.last_error())
+        return False
+
     rates = mt5.copy_rates_from_pos(symbol, mt5.TIMEFRAME_M1, 0, periods)
-    large_movements = sum(1 for rate in rates if (rate['high'] - rate['low']) > ((sum(r['high'] - r['low'] for r in rates) / periods) * threshold))
+
+    # Check if rates data was successfully retrieved
+    if rates is None:
+        print(f"Failed to retrieve rates for {symbol}.")
+        mt5.shutdown()
+        return False
+
+    large_movements = sum(1 for rate in rates if (rate['high'] - rate['low']) > (
+                (sum(r['high'] - r['low'] for r in rates) / periods) * threshold))
+
+    mt5.shutdown()
     return large_movements >= 2
+
 
 def execute_trade(symbol, direction, lot_size=0.01):
     price = mt5.symbol_info_tick(symbol).ask if direction == "BUY" else mt5.symbol_info_tick(symbol).bid

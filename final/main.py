@@ -1,6 +1,6 @@
 # main.py
 from startup import initialize_mt5, get_balance, shutdown_mt5
-from risk_management import manage_risk, close_all_trades
+from risk_managment import manage_risk, close_all_trades
 import analysis
 import time
 
@@ -9,7 +9,6 @@ SYMBOL = "EURUSD"  # Specify the symbol you are trading
 def main_loop():
     if initialize_mt5():
         initial_balance = get_balance()
-        print(f"Initial Balance: {initial_balance}")
 
         try:
             while True:
@@ -25,7 +24,7 @@ def main_loop():
                     # Or analysis.execute_trade(SYMBOL, "SELL") for a downward movement
 
                 # Call manage_risk periodically to check if certain risk conditions are met
-                manage_risk(target_profit=0.03, max_loss=0.02, initial_balance=initial_balance)
+                manage_risk(target_profit=0.03, max_loss=0.02, initial_balance=initial_balance ,get_balance=initial_balance)
 
                 # Manage open trades, possibly closing profitable ones or cutting losses
                 # For example, analysis.manage_open_trades(SYMBOL, profit_pips=10) to close trades with at least 10 pips of profit
@@ -34,8 +33,6 @@ def main_loop():
                 time.sleep(5)  # Adjust the frequency of checks as needed
         except KeyboardInterrupt:
             print("Stopping the market watch.")
-        finally:
-            shutdown_mt5()
 
 
 if __name__ == "__main__":

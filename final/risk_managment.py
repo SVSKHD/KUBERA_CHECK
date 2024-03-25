@@ -38,8 +38,8 @@ def close_all_trades():
 
 
 
-def manage_risk(target_profit, max_loss, initial_balance):
-    current_balance = get_balance()
+def manage_risk(target_profit, max_loss, initial_balance , get_balance):
+    current_balance = get_balance
     profit_loss = current_balance - initial_balance
 
     # Check for 2% loss from initial balance
