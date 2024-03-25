@@ -1,6 +1,6 @@
 import MetaTrader5 as mt5
 
-def get_account_balance():
+def start_up():
     # Initialize connection to the MetaTrader 5 terminal
     if not mt5.initialize(login=212792645, server="OctaFX-Demo", password="pn^eNL4U"):
         raise Exception("Failed to initialize MT5 connection: Error code =", mt5.last_error())
@@ -18,4 +18,4 @@ def get_account_balance():
     mt5.shutdown()
 
 # Execute the function to get and print the account balance
-get_account_balance()
+start_up()
