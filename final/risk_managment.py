@@ -1,6 +1,4 @@
 import MetaTrader5 as mt5
-
-
 def close_all_trades():
     # Initialize connection to the MetaTrader 5 terminal
     if not mt5.initialize(login=212792645, server="OctaFX-Demo", password="pn^eNL4U"):
@@ -40,5 +38,17 @@ def close_all_trades():
 
 
 
-# Execute the function to close all trades
-close_all_trades()
+def manage_risk(target_profit, max_loss, initial_balance):
+    current_balance = get_balance()
+    profit_loss = current_balance - initial_balance
+
+    # Check for 2% loss from initial balance
+    if profit_loss <= -max_loss * initial_balance:
+        print("2% loss threshold hit, closing all trades.")
+        close_all_trades()
+        # Insert logic to open new trades to cover the loss and aim for 3% profit
+
+    # Check for 3% profit target
+    elif profit_loss >= target_profit * initial_balance:
+        print("Target profit reached for the day.")
+        # Insert logic for actions after reaching target profit
