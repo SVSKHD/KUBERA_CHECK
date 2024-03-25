@@ -51,4 +51,4 @@ def manage_risk(target_profit, max_loss, initial_balance):
     # Check for 3% profit target
     elif profit_loss >= target_profit * initial_balance:
         print("Target profit reached for the day.")
-        # Insert logic for actions after reaching target profit
+        close_all_trades()
