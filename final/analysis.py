@@ -1,6 +1,7 @@
 # analysis.py
 import MetaTrader5 as mt5
-
+import ta
+import pandas
 
 def detect_volume_change(symbol, periods=20, threshold=1.5):
     if not mt5.initialize():
@@ -153,6 +154,38 @@ def print_price_info(symbol, pip_difference_threshold=15):
         print(f"{symbol} Low diff threshold met: {low_to_current_diff_pips:.2f} pips above the latest low.")
 
     return True
+
+def get_sma_signals(symbol, timeframe):
+    # Fetch historical bars for the symbol
+    bars = mt5.copy_rates_from_pos(symbol, timeframe, 0, 240)
+    if bars is None:
+        print('copy_rates_from_pos() failed, error code =', mt5.last_error())
+        quit()
+
+    # Prepare the DataFrame
+    df = pd.DataFrame(bars)
+    df.set_index(pd.to_datetime(df['time'], unit='s'), inplace=True)
+    df.drop(columns=['time'], inplace=True)
+
+    # Define SMA periods
+    short_window = 10  # Short-term SMA window
+    long_window = 50   # Long-term SMA window
+
+    # Calculate SMAs
+    df['sma_short'] = ta.trend.sma_indicator(df['close'], window=short_window)
+    df['sma_long'] = ta.trend.sma_indicator(df['close'], window=long_window)
+
+    # Initialize signals column
+    df['signal'] = 0  # No signal
+
+    # Generate buy signals (1) where short SMA crosses above long SMA
+    df.loc[df['sma_short'] > df['sma_long'], 'signal'] = 1  # Long/Buy signal
+
+    # Generate sell signals (-1) where short SMA crosses below long SMA
+    df.loc[df['sma_short'] < df['sma_long'], 'signal'] = -1  # Short/Sell signal
+
+    return df[['close', 'sma_short', 'sma_long', 'signal']]
+
 
 
 
