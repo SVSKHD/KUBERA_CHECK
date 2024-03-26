@@ -145,9 +145,6 @@ def print_price_info(symbol, pip_difference_threshold=15):
     low_to_current_diff_pips = (current_price - latest_low) / pip_size
 
     print(f"Live price for {symbol}: {current_price}, Latest High: {latest_high}, Latest Low: {latest_low}")
-    print(f"{symbol} Pip difference from latest high to current price: {high_to_current_diff_pips:.2f} pips")
-    print(f"{symbol} Pip difference from current price to latest low: {low_to_current_diff_pips:.2f} pips")
-
     # Check if the pip difference thresholds are met or exceeded
     if high_to_current_diff_pips >= pip_difference_threshold:
         print(f"{symbol} High diff threshold met: {high_to_current_diff_pips:.2f} pips below the latest high.")
