@@ -98,3 +98,65 @@ def manage_open_trades(symbol, profit_pips=10):
                 print(f"Failed to close position {position.ticket}, error code: {result.retcode}")
             else:
                 print(f"Successfully closed position {position.ticket}.")
+
+
+import MetaTrader5 as mt5
+
+def detect_price_differences(symbols, pip_difference_threshold=15):
+    if not mt5.initialize():
+        print("Could not initialize MT5, error code =", mt5.last_error())
+        return False
+
+    for symbol in symbols:  # 'symbols' should be a list of strings, not tuples
+        rates = mt5.copy_rates_from_pos(symbol, mt5.TIMEFRAME_M1, 0, 1)
+        if rates is None or len(rates) == 0:
+            print(f"Failed to retrieve rates for {symbol}.")
+            continue
+
+        latest_rate = rates[0]
+        high_to_current_diff = abs(latest_rate['high'] - latest_rate['close']) * 10**4
+        low_to_current_diff = abs(latest_rate['close'] - latest_rate['low']) * 10**4
+
+        if high_to_current_diff >= pip_difference_threshold or low_to_current_diff >= pip_difference_threshold:
+            print(f"Criteria met in {symbol}: High-to-current diff {high_to_current_diff:.0f} pips, Low-to-current diff {low_to_current_diff:.0f} pips.")
+
+    mt5.shutdown()
+    return True
+
+import MetaTrader5 as mt5
+
+def print_price_info(symbol, pip_difference_threshold=15):
+    if not mt5.initialize():
+        print("Could not initialize MT5, error code =", mt5.last_error())
+        return False
+
+    rates = mt5.copy_rates_from_pos(symbol, mt5.TIMEFRAME_M1, 0, 1)
+
+    if rates is None or len(rates) == 0:
+        print(f"Failed to retrieve rates for {symbol}.")
+        mt5.shutdown()
+        return False
+
+    latest_rate = rates[0]
+    current_price = latest_rate['close']
+    latest_high = latest_rate['high']
+    latest_low = latest_rate['low']
+
+    pip_size = 0.0001  # Adjust if necessary, e.g., 0.01 for pairs like USDJPY
+    high_to_current_diff_pips = (latest_high - current_price) / pip_size
+    low_to_current_diff_pips = (current_price - latest_low) / pip_size
+
+    print(f"Live price for {symbol}: {current_price}")
+
+    # Check if the difference from the latest high to the current price is at least 15 pips
+    if high_to_current_diff_pips >= pip_difference_threshold:
+        print(f"High diff 15 pip from live price: Current price is {high_to_current_diff_pips:.2f} pips below the latest high.")
+
+    # Check if the difference from the current price to the latest low is at least 15 pips
+    if low_to_current_diff_pips >= pip_difference_threshold:
+        print(f"Low diff 15 pip from live price: Current price is {low_to_current_diff_pips:.2f} pips above the latest low.")
+
+    mt5.shutdown()
+    return True
+
+
