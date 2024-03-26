@@ -22,7 +22,4 @@ def shutdown_mt5():
     mt5.shutdown()
     print("MT5 connection shut down.")
 
-if __name__ == "__main__":
-    if initialize_mt5():
-        get_balance()
-        shutdown_mt5()
+

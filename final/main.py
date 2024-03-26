@@ -1,7 +1,9 @@
 from startup import initialize_mt5, get_balance, shutdown_mt5
 from risk_management import manage_risk, close_all_trades
+from trade_action import close_opposite_trades
 import analysis
 import time
+
 
 # Specify the symbols you are trading
 SYMBOLS = ["EURUSD", "GBPUSD", "USDJPY", "EURJPY"]
@@ -28,12 +30,14 @@ def main_loop():
                     # Decision-making based on SMA signals
                     if latest_signal == 1:
                         print(f"Buy signal detected for {symbol} based on SMA.")
-                        # Code to execute a buy trade
-                        analysis.execute_trade(symbol, "BUY")
+                        close_opposite_trades(symbol, mt5.ORDER_TYPE_BUY)  # Close opposite trades if any
+                        analysis.execute_trade(symbol, "BUY")  # Execute the new buy trade
+
+                        # Example integration for a sell signal
                     elif latest_signal == -1:
                         print(f"Sell signal detected for {symbol} based on SMA.")
-                        # Code to execute a sell trade
-                        analysis.execute_trade(symbol, "SELL")
+                        close_opposite_trades(symbol, mt5.ORDER_TYPE_SELL)  # Close opposite trades if any
+                        analysis.execute_trade(symbol, "SELL")  # Execute the new sell trade
 
                     # Further decision-making based on volume and institutional movement
                     if volume_spike and institutional_movement:
