@@ -43,10 +43,6 @@ def detect_institutional_movement(symbol, periods=20, threshold=1.5):
 
 
 def manage_open_trades(symbol, profit_pips=10):
-    if not mt5.initialize():
-        print("Could not initialize MT5, error code =", mt5.last_error())
-        return
-
     positions = mt5.positions_get(symbol=symbol)
     if positions is None:
         print("Failed to get positions, error code =", mt5.last_error())
@@ -83,8 +79,6 @@ def manage_open_trades(symbol, profit_pips=10):
             else:
                 print(f"Successfully closed position {position.ticket}.")
 
-
-import MetaTrader5 as mt5
 
 def detect_price_differences(symbols, pip_difference_threshold=15):
     if not mt5.initialize():

@@ -20,20 +20,6 @@ def execute_trade(symbol, direction, lot_size=0.01):
 
 
 def place_trade(symbol, order_type, volume, stop_loss=None, take_profit=None, deviation=20):
-    """
-    Places a trade on MT5.
-
-    Parameters:
-    - symbol (str): The symbol to trade.
-    - order_type (str): 'long' for a buy order, 'short' for a sell order.
-    - volume (float): The volume of the trade.
-    - stop_loss (float, optional): The stop loss price.
-    - take_profit (float, optional): The take profit price.
-    - deviation (int): Maximum allowed deviation from the requested price.
-
-    Returns:
-    - dict: Result of the trade operation.
-    """
     # Get current price for the symbol
     symbol_info = mt5.symbol_info(symbol)
     if symbol_info is None:
@@ -63,7 +49,7 @@ def place_trade(symbol, order_type, volume, stop_loss=None, take_profit=None, de
         "magic": 0,
         "comment": "Placed by Python script",
         "type_time": mt5.ORDER_TIME_GTC,
-        "type_filling": mt5.ORDER_FILLING_IOC,
+        "type_filling": mt5.ORDER_FILLING_FOK,
     }
 
     # Send the trade request
