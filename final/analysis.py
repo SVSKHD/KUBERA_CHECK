@@ -123,8 +123,6 @@ def detect_price_differences(symbols, pip_difference_threshold=15):
     mt5.shutdown()
     return True
 
-import MetaTrader5 as mt5
-
 def print_price_info(symbol, pip_difference_threshold=15):
     if not mt5.initialize():
         print("Could not initialize MT5, error code =", mt5.last_error())
@@ -142,21 +140,22 @@ def print_price_info(symbol, pip_difference_threshold=15):
     latest_high = latest_rate['high']
     latest_low = latest_rate['low']
 
-    pip_size = 0.0001  # Adjust if necessary, e.g., 0.01 for pairs like USDJPY
+    pip_size = 0.0001  # Adjust for 5-digit pricing or pairs like USDJPY if necessary
     high_to_current_diff_pips = (latest_high - current_price) / pip_size
     low_to_current_diff_pips = (current_price - latest_low) / pip_size
 
-    print(f"Live price for {symbol}: {current_price}")
+    print(f"Live price for {symbol}: {current_price}, Latest High: {latest_high}, Latest Low: {latest_low}")
+    print(f"{symbol} Pip difference from latest high to current price: {high_to_current_diff_pips:.2f} pips")
+    print(f"{symbol} Pip difference from current price to latest low: {low_to_current_diff_pips:.2f} pips")
 
-    # Check if the difference from the latest high to the current price is at least 15 pips
+    # Check if the pip difference thresholds are met or exceeded
     if high_to_current_diff_pips >= pip_difference_threshold:
-        print(f"High diff 15 pip from live price: Current price is {high_to_current_diff_pips:.2f} pips below the latest high.")
+        print(f"{symbol} High diff threshold met: {high_to_current_diff_pips:.2f} pips below the latest high.")
 
-    # Check if the difference from the current price to the latest low is at least 15 pips
     if low_to_current_diff_pips >= pip_difference_threshold:
-        print(f"Low diff 15 pip from live price: Current price is {low_to_current_diff_pips:.2f} pips above the latest low.")
+        print(f"{symbol} Low diff threshold met: {low_to_current_diff_pips:.2f} pips above the latest low.")
 
-    mt5.shutdown()
     return True
+
 
 

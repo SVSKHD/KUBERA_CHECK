@@ -3,12 +3,8 @@ from risk_management import manage_risk, close_all_trades
 import analysis
 import time
 
-SYMBOL = "EURUSD"  # Specify the symbol you are trading
-SYMBOL_PAIRS = [
-    ("EURUSD", "GBPUSD"),
-    ("USDJPY", "EURJPY"),
-    # Add more pairs as needed
-]
+# Specify the symbols you are trading
+SYMBOLS = ["EURUSD", "GBPUSD", "USDJPY", "EURJPY"]
 
 def main_loop():
     if initialize_mt5():
@@ -16,23 +12,26 @@ def main_loop():
 
         try:
             while True:
-                # Call analysis functions to detect market conditions
-                volume_spike = analysis.detect_volume_change(SYMBOL)
-                institutional_movement = analysis.detect_institutional_movement(SYMBOL)
+                for symbol in SYMBOLS:
+                    # Call analysis functions to detect market conditions for each symbol
+                    volume_spike = analysis.detect_volume_change(symbol)
+                    institutional_movement = analysis.detect_institutional_movement(symbol)
 
-                # Check pip differences between specified symbol pairs
-                # analysis.detect_price_differences(SYMBOL_PAIRS)
-                analysis.print_price_info(symbol=SYMBOL)
-                # Decision-making based on analysis
-                if volume_spike and institutional_movement:
-                    print(f"Significant market activity detected for {SYMBOL}.")
-                    # Decisions to open trades based on analysis
+                    # Print price information and check pip differences for each symbol
+                    analysis.print_price_info(symbol=symbol)
 
-                # Risk management checks
-                manage_risk(target_profit=0.03, max_loss=0.02, initial_balance=initial_balance ,get_balance=initial_balance)
+                    # Decision-making based on analysis
+                    if volume_spike and institutional_movement:
+                        print(f"Significant market activity detected for {symbol}.")
+                        # Decisions to open trades based on analysis for the symbol
 
-                # Managing open trades
-                # For example, analysis.manage_open_trades(SYMBOL, profit_pips=10)
+                    # Note: Ensure your risk management and trade management functions can handle multiple symbols
+
+                # Risk management checks - consider how to apply this for multiple symbols
+                # manage_risk(target_profit=0.03, max_loss=0.02, initial_balance=initial_balance, get_balance=initial_balance)
+
+                # Managing open trades for each symbol
+                # For example: analysis.manage_open_trades(SYMBOL, profit_pips=10)
 
                 print("Watching the market...")
                 time.sleep(5)  # Adjust the frequency of checks as needed
