@@ -41,23 +41,6 @@ def detect_institutional_movement(symbol, periods=20, threshold=1.5):
     return large_movements >= 2
 
 
-def execute_trade(symbol, direction, lot_size=0.01):
-    price = mt5.symbol_info_tick(symbol).ask if direction == "BUY" else mt5.symbol_info_tick(symbol).bid
-    trade_type = mt5.ORDER_TYPE_BUY if direction == "BUY" else mt5.ORDER_TYPE_SELL
-    request = {
-        "action": mt5.TRADE_ACTION_DEAL,
-        "symbol": symbol,
-        "volume": lot_size,
-        "type": trade_type,
-        "price": price,
-        "comment": "Executed by bot",
-        "type_time": mt5.ORDER_TIME_GTC,
-        "type_filling": mt5.ORDER_FILLING_FOK,
-    }
-    result = mt5.order_send(request)
-    if result.retcode != mt5.TRADE_RETCODE_DONE:
-        print("Failed to execute trade:", result)
-
 
 def manage_open_trades(symbol, profit_pips=10):
     if not mt5.initialize():
