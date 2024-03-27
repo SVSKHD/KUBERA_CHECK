@@ -1,7 +1,7 @@
 # analysis.py
 import MetaTrader5 as mt5
 import ta
-import pandas
+import pandas as pd
 
 def detect_volume_change(symbol, periods=20, threshold=1.5):
     if not mt5.initialize():
@@ -69,7 +69,7 @@ def manage_open_trades(symbol, profit_pips=10):
                 "magic": 0,
                 "comment": "Closed by bot for profit",
                 "type_time": mt5.ORDER_TIME_GTC,
-                "type_filling": mt5.ORDER_FILLING_IOC,
+                "type_filling": mt5.ORDER_FILLING_FOK,
             }
 
             # Send the trade request to close the position

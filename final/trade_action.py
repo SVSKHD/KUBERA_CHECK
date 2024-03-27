@@ -19,6 +19,56 @@ def execute_trade(symbol, direction, lot_size=0.01):
         print("Failed to execute trade:", result)
 
 
+def volume_calculated_based_on_risk_reward(symbol, balance, target_profit, stop_loss):
+    # Assuming stop_loss is the risk percentage (e.g., 0.02 for 2%)
+    risk_amount = balance * stop_loss  # Amount of money at risk based on the stop loss percentage
+
+    # Determine the stop loss size in pips
+    stop_loss_pips = 20  # Example value, adjust based on your strategy
+
+    # Calculate the pip value for the symbol
+    # This is a simplified example. Adjust the formula based on your account currency and the traded symbol
+    pip_value = 10 / mt5.symbol_info(symbol).point  # $10 per pip for a standard lot in some pairs
+
+    # Calculate the volume that matches the risk amount with the stop loss size
+    volume = risk_amount / (stop_loss_pips * pip_value)
+
+    # Adjust volume based on broker's restrictions
+    symbol_info = mt5.symbol_info(symbol)
+    volume = max(symbol_info.volume_min, min(volume, symbol_info.volume_max))
+    volume_step = symbol_info.volume_step
+    volume = (volume // volume_step) * volume_step  # Adjust volume to the nearest allowed step
+
+    return volume
+
+
+def manage_trades_for_symbol(symbol, initial_balance, loss_threshold=0.02, target_profit=0.05, stop_loss=0.02):
+    # Calculate allowable loss in account currency
+    max_loss_amount = initial_balance * loss_threshold
+
+    # Fetch open positions for the symbol
+    positions = mt5.positions_get(symbol=symbol)
+    if positions is None:
+        print(f"No positions for {symbol}, error code =", mt5.last_error())
+        return
+
+    current_loss = sum(position.profit for position in positions if position.profit < 0)
+
+    # Close all positions if losses exceed the threshold
+    if abs(current_loss) > max_loss_amount:
+        for position in positions:
+            close_opposite_trades(symbol, position.type)
+
+        # Define "BUY_OR_SELL" logic based on your strategy
+        trade_direction = "BUY"  # or "SELL", as determined by your analysis
+
+        # Calculate the required volume for the new trade
+        volume = volume_calculated_based_on_risk_reward(symbol, initial_balance, target_profit, stop_loss)
+
+        # Execute the new trade
+        execute_trade(symbol, trade_direction, volume)
+
+
 def place_trade(symbol, order_type, volume, stop_loss=None, take_profit=None, deviation=20):
     # Get current price for the symbol
     symbol_info = mt5.symbol_info(symbol)

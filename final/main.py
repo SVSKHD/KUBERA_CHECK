@@ -1,6 +1,8 @@
+import MetaTrader5 as mt5
+import pandas as pd
 from startup import initialize_mt5, get_balance, shutdown_mt5
 from risk_management import manage_risk, close_all_trades
-from trade_action import close_opposite_trades, execute_trade
+from trade_action import close_opposite_trades, execute_trade , manage_trades_for_symbol
 import analysis
 import time
 
@@ -46,7 +48,7 @@ def main_loop():
 
                     # Managing open trades for each symbol
                     analysis.manage_open_trades(symbol, profit_pips=10)
-
+                    manage_trades_for_symbol(symbol, initial_balance)
                 print("Watching the market...")
                 time.sleep(5)  # Adjust the frequency of checks as needed
         except KeyboardInterrupt:
