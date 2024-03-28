@@ -2,6 +2,7 @@
 import MetaTrader5 as mt5
 import ta
 import pandas as pd
+import pandas_ta as ta
 
 def detect_volume_change(symbol, periods=20, threshold=1.5):
     if not mt5.initialize():
@@ -162,6 +163,51 @@ def get_sma_signals(symbol, timeframe):
     df.loc[df['sma_short'] < df['sma_long'], 'signal'] = -1  # Short/Sell signal
 
     return df[['close', 'sma_short', 'sma_long', 'signal']]
+
+
+def get_rsi(symbol, timeframes):
+    rsi_timeframes = {}
+
+    if not mt5.initialize():
+        print("Could not initialize MT5, error code =", mt5.last_error())
+        return
+
+    for timeframe in timeframes:
+        rates = mt5.copy_rates_from_pos(symbol, timeframe, 0, 100)  # Adjust the number of rates as needed
+        if rates is None:
+            print(f"No rates data found for timeframe {timeframe}.")
+            continue
+
+        df = pd.DataFrame(rates)
+        df.set_index(pd.to_datetime(df['time'], unit='s'), inplace=True)
+        df['RSI'] = ta.rsi(df['close'], length=14)  # Default period is 14
+
+        rsi_timeframes[timeframe] = df[['close', 'RSI']]
+
+    mt5.shutdown()
+    return rsi_timeframes
+
+def get_macd(symbol, timeframes):
+    macd_timeframes = {}
+
+    if not mt5.initialize():
+        print("Could not initialize MT5, error code =", mt5.last_error())
+        return
+
+    for timeframe in timeframes:
+        rates = mt5.copy_rates_from_pos(symbol, timeframe, 0, 100)  # Adjust the number of rates as needed
+        if rates is None:
+            print(f"No rates data found for timeframe {timeframe}.")
+            continue
+
+        df = pd.DataFrame(rates)
+        df.set_index(pd.to_datetime(df['time'], unit='s'), inplace=True)
+        df.ta.macd(close='close', fast=12, slow=26, signal=9, append=True)  # Default MACD parameters
+
+        macd_timeframes[timeframe] = df[['close', 'MACD_12_26_9', 'MACDs_12_26_9', 'MACDh_12_26_9']]
+
+    mt5.shutdown()
+    return macd_timeframes
 
 
 
