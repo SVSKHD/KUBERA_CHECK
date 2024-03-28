@@ -1,16 +1,17 @@
 import MetaTrader5 as mt5
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 import time
 from startup import initialize_mt5, get_balance, shutdown_mt5
 from trade_action import close_opposite_trades, execute_trade, manage_trades_for_symbol
-import analysis
+import analysis  # Ensure this module contains the async_analyze_market function
 
 SYMBOLS = ["EURUSD", "GBPUSD", "USDJPY", "EURJPY"]
-TIMEFRAME = mt5.TIMEFRAME_H1  # Define your desired timeframe here, e.g., hourly
+TIMEFRAMES = [mt5.TIMEFRAME_M15, mt5.TIMEFRAME_H1, mt5.TIMEFRAME_H4]  # Example timeframes
 
-
-def analyze_and_trade(symbol, timeframe, initial_balance):
-    print(f"Analyzing {symbol}...")
-    market_decision = analysis.analyze_market(symbol, timeframe)  # Assume this returns 'buy', 'sell', or 'hold'
+async def analyze_and_trade(symbol, timeframe, initial_balance):
+    print(f"Analyzing {symbol} on {timeframe}...")
+    market_decision = await analysis.async_analyze_market(symbol, timeframe)  # Use the async version
 
     if market_decision in ['buy', 'sell']:
         print(f"{market_decision.capitalize()} signal detected for {symbol}")
@@ -20,6 +21,12 @@ def analyze_and_trade(symbol, timeframe, initial_balance):
 
     manage_trades_for_symbol(symbol, initial_balance)
 
+async def analyze_symbols(symbols, timeframes, initial_balance):
+    tasks = []
+    for symbol in symbols:
+        for timeframe in timeframes:
+            tasks.append(analyze_and_trade(symbol, timeframe, initial_balance))
+    await asyncio.gather(*tasks)
 
 def main_loop():
     if initialize_mt5():
@@ -27,16 +34,9 @@ def main_loop():
         initial_balance = get_balance()
 
         try:
+            loop = asyncio.get_event_loop()
             while True:
-                threads = []
-                for symbol in SYMBOLS:
-                    t = threading.Thread(target=analyze_and_trade, args=(symbol, TIMEFRAME, initial_balance))
-                    t.start()
-                    threads.append(t)
-
-                # Wait for all threads to complete
-                for t in threads:
-                    t.join()
+                loop.run_until_complete(analyze_symbols(SYMBOLS, TIMEFRAMES, initial_balance))
 
                 print("Sleeping for a bit...")
                 time.sleep(60)  # Sleep for 1 minute before next analysis
@@ -45,7 +45,6 @@ def main_loop():
         finally:
             shutdown_mt5()
             print("MT5 shutdown successfully")
-
 
 if __name__ == "__main__":
     main_loop()

@@ -2,7 +2,8 @@
 import MetaTrader5 as mt5
 import ta
 import pandas as pd
-
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 
 def detect_volume_change(symbol, periods=20, threshold=1.5):
     if not mt5.initialize():
@@ -213,4 +214,50 @@ def analyze_market(symbol, timeframe):
         return 'neutral'
 
 
+async def async_get_rates(symbol, timeframe, count):
+    loop = asyncio.get_running_loop()
+    with ThreadPoolExecutor() as pool:
+        rates = await loop.run_in_executor(pool, mt5.copy_rates_from_pos, symbol, timeframe, 0, count)
+    return rates
 
+async def async_get_rsi_signal(symbol, timeframe):
+    rates = await async_get_rates(symbol, timeframe, 500)
+    if rates is None or len(rates) == 0:
+        return 'neutral'
+
+    df = pd.DataFrame(rates)
+    df['rsi'] = ta.momentum.rsi(df['close'], window=14)
+
+    if df['rsi'].iloc[-1] > 70:
+        return 'sell'
+    elif df['rsi'].iloc[-1] < 30:
+        return 'buy'
+    else:
+        return 'neutral'
+
+async def async_get_macd_signal(symbol, timeframe):
+    rates = await async_get_rates(symbol, timeframe, 500)
+    if rates is None or len(rates) == 0:
+        return 'neutral'
+
+    df = pd.DataFrame(rates)
+    macd = ta.trend.MACD(df['close'])
+    df['macd_diff'] = macd.macd_diff()
+
+    if df['macd_diff'].iloc[-2] < 0 and df['macd_diff'].iloc[-1] > 0:
+        return 'buy'
+    elif df['macd_diff'].iloc[-2] > 0 and df['macd_diff'].iloc[-1] < 0:
+        return 'sell'
+    else:
+        return 'neutral'
+
+async def async_analyze_market(symbol, timeframe):
+    rsi_signal = await async_get_rsi_signal(symbol, timeframe)
+    macd_signal = await async_get_macd_signal(symbol, timeframe)
+
+    if rsi_signal == 'buy' and macd_signal == 'buy':
+        return 'buy'
+    elif rsi_signal == 'sell' and macd_signal == 'sell':
+        return 'sell'
+    else:
+        return 'neutral'
