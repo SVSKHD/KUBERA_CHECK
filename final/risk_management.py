@@ -80,11 +80,11 @@ async def analyze_and_trade(symbol, timeframe, initial_balance):
     manage_trades_for_symbol(symbol, initial_balance)
 
 
-def setup_risk_management(symbols, initial_balances):
+def setup_risk_management(symbols, initial_balance):
     for symbol in symbols:
-        symbol_initial_balances[symbol] = initial_balances[symbol]
-        symbol_max_loss[symbol] = initial_balances[symbol] * DAILY_LOSS_LIMIT
-        symbol_profit_target[symbol] = initial_balances[symbol] * DAILY_PROFIT_TARGET
+        symbol_initial_balances[symbol] = initial_balance
+        symbol_max_loss[symbol] = initial_balance * DAILY_LOSS_LIMIT
+        symbol_profit_target[symbol] = initial_balance * DAILY_PROFIT_TARGET
 
 
 def close_all_trades():

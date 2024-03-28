@@ -256,8 +256,11 @@ async def async_analyze_market(symbol, timeframe):
     macd_signal = await async_get_macd_signal(symbol, timeframe)
 
     if rsi_signal == 'buy' and macd_signal == 'buy':
+        print("BUY")
         return 'buy'
     elif rsi_signal == 'sell' and macd_signal == 'sell':
+        print("SEL")
         return 'sell'
     else:
+        print("NOTHING FOR NOW")
         return 'neutral'

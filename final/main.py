@@ -7,8 +7,9 @@ from trade_action import close_opposite_trades, execute_trade, manage_trades_for
 import analysis  # Ensure this module contains the async_analyze_market function
 from risk_management import close_all_trades, setup_risk_management
 
-SYMBOLS = ["EURUSD", "GBPUSD", "USDJPY", "EURJPY"]
+SYMBOLS = ["EURUSD", "GBPUSD", "USDJPY", "EURJPY", "NZDUSD"]
 TIMEFRAMES = [mt5.TIMEFRAME_M15, mt5.TIMEFRAME_H1, mt5.TIMEFRAME_H4]
+
 
 
 async def analyze_and_trade(symbol, timeframe, initial_balance):
@@ -45,7 +46,7 @@ def main_loop():
             while True:
                 loop.run_until_complete(analyze_symbols(SYMBOLS, TIMEFRAMES, initial_balance))
                 print("Sleeping for a bit...")
-                time.sleep(60)  # Sleep for 1 minute before next analysis
+                time.sleep(1)  # Sleep for 1 minute before next analysis
 
                 # Optionally, close all trades at the end of the trading day or on certain conditions
                 # close_all_trades()
