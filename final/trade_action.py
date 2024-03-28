@@ -2,18 +2,8 @@ import MetaTrader5 as mt5
 
 
 def execute_trade(symbol, direction, lot_size=0.01):
-    symbol_info = mt5.symbol_info_tick(symbol)
-    if symbol_info is None:
-        print(f"Failed to get symbol info for {symbol}.")
-        return False
-
-    # Use the already retrieved symbol_info for the price
-    price = symbol_info.ask if direction == "BUY" else symbol_info.bid
-
-    # Define trade type based on direction
+    price = mt5.symbol_info_tick(symbol).ask if direction == "BUY" else mt5.symbol_info_tick(symbol).bid
     trade_type = mt5.ORDER_TYPE_BUY if direction == "BUY" else mt5.ORDER_TYPE_SELL
-
-    # Prepare the request dictionary
     request = {
         "action": mt5.TRADE_ACTION_DEAL,
         "symbol": symbol,
@@ -24,19 +14,9 @@ def execute_trade(symbol, direction, lot_size=0.01):
         "type_time": mt5.ORDER_TIME_GTC,
         "type_filling": mt5.ORDER_FILLING_FOK,
     }
-
-    # Send a trading request
     result = mt5.order_send(request)
-
-    # Check the result and print detailed error information if needed
     if result.retcode != mt5.TRADE_RETCODE_DONE:
-        error_code, error_description = mt5.last_error()
-        print(f"Failed to execute trade for {symbol}. Error code: {error_code}, Description: {error_description}")
-        return False
-
-    # If the trade was successful, you might want to print some confirmation or return a success indicator
-    print(f"Trade executed successfully for {symbol}, direction: {direction}, lot size: {lot_size}.")
-    return True
+        print("Failed to execute trade:", result)
 
 
 def volume_calculated_based_on_risk_reward(symbol, balance, target_profit, stop_loss):
