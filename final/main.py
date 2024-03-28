@@ -1,61 +1,47 @@
 import MetaTrader5 as mt5
 import pandas as pd
+import time
 from startup import initialize_mt5, get_balance, shutdown_mt5
 from risk_management import manage_risk, close_all_trades
-from trade_action import close_opposite_trades, execute_trade , manage_trades_for_symbol
+from trade_action import close_opposite_trades, execute_trade, manage_trades_for_symbol
 import analysis
-import time
 
-
-# Specify the symbols you are trading
 SYMBOLS = ["EURUSD", "GBPUSD", "USDJPY", "EURJPY"]
-
 
 def main_loop():
     if initialize_mt5():
+        print("MT5 initialized successfully")
         initial_balance = get_balance()
+        print(f"Initial Balance: {initial_balance}")
 
         try:
             while True:
                 for symbol in SYMBOLS:
-                    # Call analysis functions to detect market conditions for each symbol
-                    volume_spike = analysis.detect_volume_change(symbol)
-                    institutional_movement = analysis.detect_institutional_movement(symbol)
+                    print(f"Analyzing {symbol}...")
+                    market_decision = analysis.analyze_market(symbol)  # This should return 'buy', 'sell', or 'hold'
 
-                    # Print price information and check pip differences for each symbol
-                    analysis.print_price_info(symbol=symbol)
+                    if market_decision in ['buy', 'sell']:
+                        print(f"{market_decision.capitalize()} signal detected for {symbol}")
 
-                    # Get SMA signals for the symbol
-                    sma_signals_df = analysis.get_sma_signals(symbol, mt5.TIMEFRAME_H1)  # Adjust timeframe as needed
-                    latest_signal = sma_signals_df['signal'].iloc[-1]  # Get the latest signal
+                        # Close opposite trades if any
+                        if market_decision == 'buy':
+                            close_opposite_trades(symbol, mt5.ORDER_TYPE_SELL)
+                        else:
+                            close_opposite_trades(symbol, mt5.ORDER_TYPE_BUY)
 
-                    # Decision-making based on SMA signals
-                    if latest_signal == 1:
-                        print(f"Buy signal detected for {symbol} based on SMA.")
-                        close_opposite_trades(symbol, mt5.ORDER_TYPE_BUY)  # Close opposite trades if any
-                        execute_trade(symbol, "BUY")  # Execute the new buy trade
+                        # Execute trade
+                        execute_trade(symbol, market_decision.upper())
 
-                        # Example integration for a sell signal
-                    elif latest_signal == -1:
-                        print(f"Sell signal detected for {symbol} based on SMA.")
-                        close_opposite_trades(symbol, mt5.ORDER_TYPE_SELL)  # Close opposite trades if any
-                        execute_trade(symbol, "SELL")  # Execute the new sell trade
-
-                    # Further decision-making based on volume and institutional movement
-                    if volume_spike and institutional_movement:
-                        print(f"Significant market activity detected for {symbol}.")
-                        # Additional decisions to open trades based on analysis for the symbol
-
-                    # Managing open trades for each symbol
-                    analysis.manage_open_trades(symbol, profit_pips=10)
+                    # Manage open trades for the symbol
                     manage_trades_for_symbol(symbol, initial_balance)
-                print("Watching the market...")
-                time.sleep(5)  # Adjust the frequency of checks as needed
-        except KeyboardInterrupt:
-            print("Stopping the market watch.")
-        finally:
-            shutdown_mt5()  # Ensure MT5 is properly shutdown when exiting
 
+                print("Sleeping for a bit...")
+                time.sleep(60)  # Sleep for 1 minute before next analysis
+        except KeyboardInterrupt:
+            print("Stopping the trading bot...")
+        finally:
+            shutdown_mt5()
+            print("MT5 shutdown successfully")
 
 if __name__ == "__main__":
     main_loop()
