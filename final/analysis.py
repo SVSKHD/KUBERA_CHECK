@@ -164,76 +164,53 @@ def get_sma_signals(symbol, timeframe):
 
     return df[['close', 'sma_short', 'sma_long', 'signal']]
 
-def get_rsi_signals(symbol, timeframes):
-    if not mt5.initialize():
-        print("Could not initialize MT5, error code =", mt5.last_error())
-        return None
+def get_rsi_signal(symbol, timeframe):
+    rates = mt5.copy_rates_from_pos(symbol, timeframe, 0, 500)
+    if rates is None or len(rates) == 0:
+        print(f"No rates data found for {symbol} on timeframe {timeframe}.")
+        return 'neutral'  # Default to neutral if no data is found
 
-    signals = {}
-    for tf in timeframes:
-        rates = mt5.copy_rates_from_pos(symbol, tf, 0, 500)
-        if rates is None or len(rates) == 0:
-            print(f"No rates data found for {symbol} on timeframe {tf}.")
-            continue
+    df = pd.DataFrame(rates)
+    df['rsi'] = ta.momentum.rsi(df['close'], window=14)  # 14-period RSI
 
-        df = pd.DataFrame(rates)
-        df['rsi'] = ta.momentum.rsi(df['close'], window=14)  # Using a 14-period RSI
-
-        # Define the signal based on RSI thresholds
-        if df['rsi'].iloc[-1] > 70:
-            signals[tf] = 'sell'
-        elif df['rsi'].iloc[-1] < 30:
-            signals[tf] = 'buy'
-        else:
-            signals[tf] = 'neutral'
-
-    mt5.shutdown()
-    return signals
-
-def get_macd_signals(symbol, timeframes):
-    if not mt5.initialize():
-        print("Could not initialize MT5, error code =", mt5.last_error())
-        return None
-
-    signals = {}
-    for tf in timeframes:
-        rates = mt5.copy_rates_from_pos(symbol, tf, 0, 500)
-        if rates is None or len(rates) == 0:
-            print(f"No rates data found for {symbol} on timeframe {tf}.")
-            continue
-
-        df = pd.DataFrame(rates)
-        macd = ta.trend.MACD(df['close'])
-        df['macd_diff'] = macd.macd_diff()
-
-        # Define the signal based on MACD histogram
-        if df['macd_diff'].iloc[-2] < 0 and df['macd_diff'].iloc[-1] > 0:
-            signals[tf] = 'buy'
-        elif df['macd_diff'].iloc[-2] > 0 and df['macd_diff'].iloc[-1] < 0:
-            signals[tf] = 'sell'
-        else:
-            signals[tf] = 'neutral'
-
-    mt5.shutdown()
-    return signals
-
-def analyze_market(symbol):
-    timeframes = [mt5.TIMEFRAME_M15, mt5.TIMEFRAME_M30, mt5.TIMEFRAME_H1]  # Example timeframes
-
-    rsi_signals = get_rsi_signals(symbol, timeframes)
-    macd_signals = get_macd_signals(symbol, timeframes)
-
-    buy_signals = sum(signal == 'buy' for signal in rsi_signals.values() if signal != 'neutral') + \
-                  sum(signal == 'buy' for signal in macd_signals.values() if signal != 'neutral')
-
-    sell_signals = sum(signal == 'sell' for signal in rsi_signals.values() if signal != 'neutral') + \
-                   sum(signal == 'sell' for signal in macd_signals.values() if signal != 'neutral')
-
-    if buy_signals > sell_signals:
+    # Define the signal based on RSI thresholds
+    if df['rsi'].iloc[-1] > 70:
+        return 'sell'
+    elif df['rsi'].iloc[-1] < 30:
         return 'buy'
-    elif sell_signals > buy_signals:
+    else:
+        return 'neutral'
+
+
+def get_macd_signal(symbol, timeframe):
+    rates = mt5.copy_rates_from_pos(symbol, timeframe, 0, 500)
+    if rates is None or len(rates) == 0:
+        print(f"No rates data found for {symbol} on timeframe {timeframe}.")
+        return 'neutral'  # Default to neutral if no data is found
+
+    df = pd.DataFrame(rates)
+    macd = ta.trend.MACD(df['close'])
+    df['macd_diff'] = macd.macd_diff()
+
+    # Define the signal based on the MACD histogram
+    if df['macd_diff'].iloc[-2] < 0 and df['macd_diff'].iloc[-1] > 0:
+        return 'buy'
+    elif df['macd_diff'].iloc[-2] > 0 and df['macd_diff'].iloc[-1] < 0:
         return 'sell'
     else:
         return 'neutral'
+
+
+def analyze_market(symbol, timeframe):
+    rsi_signal = get_rsi_signal(symbol, timeframe)
+    macd_signal = get_macd_signal(symbol, timeframe)
+
+    if rsi_signal == 'buy' and macd_signal == 'buy':
+        return 'buy'
+    elif rsi_signal == 'sell' and macd_signal == 'sell':
+        return 'sell'
+    else:
+        return 'neutral'
+
 
 
