@@ -4,7 +4,8 @@ import ta
 import pandas as pd
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
-
+from sklearn.preprocessing import MinMaxScaler
+from keras.models import load_model
 def detect_volume_change(symbol, periods=20, threshold=1.5):
     if not mt5.initialize():
         print("Could not initialize MT5, error code =", mt5.last_error())
