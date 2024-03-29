@@ -49,7 +49,7 @@ async def async_get_rates(symbol, timeframe, count):
 
 # Asynchronous function to predict signal for a given symbol and timeframe
 async def async_predict_signal_for_timeframe(symbol, timeframe, model_path='lstm_model.h5'):
-    rates = await async_get_rates(symbol, timeframe, 500)  # Fetching last 500 bars
+    rates = await async_get_rates(symbol, timeframe, 1000)  # Fetching last 500 bars
     if rates is None or len(rates) == 0:
         return (timeframe, 'neutral', None)  # Include 'None' for price when data is unavailable
 
