@@ -21,12 +21,31 @@ def get_symbols_for_today():
 def analyze_symbol(symbol, timeframe):
     model_path = f'{symbol}_{timeframe}_lstm_model.h5'
 
+    # Initialize MT5 connection if not already initialized
+    if not mt5.initialize():
+        print("MT5 initialize() failed, error code =", mt5.last_error())
+        return
+
+    # Fetch the asking price for the symbol
+    tick = mt5.symbol_info_tick(symbol)
+    if tick is None:
+        print(f"Failed to get tick data for {symbol}.")
+        mt5.shutdown()
+        return
+    last_price = tick.ask  # Corrected to use the asking price directly
+
+    print(f"Last known asking price for {symbol}: {last_price}")
+
     if not os.path.exists(model_path):
         print(f"Model for {symbol} not found. Training a new model.")
         train_lstm_model(symbol, timeframe, pd.Timestamp.now() - pd.Timedelta(days=365), pd.Timestamp.now())
 
     signal = predict_signal(symbol, timeframe, model_path)
     print(f"Signal for {symbol} at timeframe {timeframe}: {signal}")
+
+    # Shutdown MT5 connection
+    mt5.shutdown()
+
 
 
 async def main():
